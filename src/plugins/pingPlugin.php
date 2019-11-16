@@ -26,7 +26,6 @@ class PingPlugin {
                 if ($this->statusOn) {
                     yield $this->sendMsg($mp, $update, 'pong');
                     //yield $mp->echo('Ping command:' . $msgEnd . PHP_EOL);
-                    break;
                 }
                 $reply = null;
                 break;
@@ -61,7 +60,7 @@ class PingPlugin {
         //try {
             yield $mp->messages->sendMessage([
                 'peer'            => Upd::getToId($update),
-                'reply_to_msg_id' => $update['message']['reply_to_msg_id'],  //Upd::getReplyToMsgId($update),
+                'reply_to_msg_id' => $update['message']['id'],  //Upd::getReplyToMsgId($update),
                 'message'         => $text,
                 'parse_mode'      => 'HTML'
             ]);
