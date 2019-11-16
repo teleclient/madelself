@@ -2,6 +2,17 @@ vendor/
 node_modules/
 npm-debug.log
 
+# MadelineProt specific
+composer.lock
+*.phar
+config.php
+*.madeline
+*.lock
+*.log
+madeline.php
+madeline.phar.version
+
+
 # Laravel 4 specific
 bootstrap/compiled.php
 app/storage/
