@@ -2,6 +2,8 @@ vendor/
 node_modules/
 npm-debug.log
 
+nbproject/
+
 # MadelineProt specific
 composer.lock
 *.phar
@@ -29,3 +31,4 @@ Homestead.json
 
 # Rocketeer PHP task runner and deployment package. https://github.com/rocketeers/rocketeer
 .rocketeer/
+/nbproject/private/

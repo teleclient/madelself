@@ -4,7 +4,7 @@
 
 \set_include_path(\get_include_path().PATH_SEPARATOR.dirname(__DIR__, 1));
 
-//date_default_timezone_set('Asia/Tehran');
+date_default_timezone_set('Asia/Tehran');
 ini_set('memory_limit', '2048M');
 error_reporting(E_ALL);                              // always TRUE
 ini_set('ignore_repeated_errors', '1');              // always TRUE
@@ -87,10 +87,10 @@ while (!$locked) {
     }
 }
 
-//\danog\MadelineProto\Shutdown::addCallback(static function () use ($lock) {
-//    flock($lock, LOCK_UN);
-//    fclose($lock);
-//});
+\danog\MadelineProto\Shutdown::addCallback(static function () use ($lock) {
+    flock($lock, LOCK_UN);
+    fclose($lock);
+});
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
 $settings['logger']['logger_level'] = \danog\MadelineProto\Logger::FATAL_ERROR;
@@ -104,7 +104,7 @@ $MadelineProto->async(true);
 
 $MadelineProto->loop(function () use ($MadelineProto) {
     yield $MadelineProto->start();
-    yield $MadelineProto->setEventHandler('\EventHandler');
+    yield $MadelineProto->setEventHandler(EventHandler::class);
 });
 
 $MadelineProto->loop();

@@ -25,17 +25,18 @@ class VerifyPlugin {
         $chatInfo     = yield $MadelineProto->get_info($update);
         $chatID       = intval($chatInfo['bot_api_id']);
         $chatType     = $chatInfo['type'];  // can be either “private”, “group”, “supergroup” or “channel”
-        //$chatInfo     = null;
+        $chatTitle    = !isset($chatInfo['Chat']['title'])? ' ' : $chatInfo['Chat']['title'];
 
         $res = json_encode($update, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|
-                            JSON_UNESCAPED_SLASHES);
-        $chatJson = json_encode($chatInfo,  JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|
-                                            JSON_UNESCAPED_SLASHES );
+                                                      JSON_UNESCAPED_SLASHES);
 
-        $msgFront = substr(nl2br($msg, FALSE), 0, 40);
-        yield $MadelineProto->echo  ('chatID: '.$chatID.'/'.$update_id.' '.$update_type.' '.$msgFront.PHP_EOL);
+        //$chatJson = json_encode($chatInfo,  JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|
+        //                                    JSON_UNESCAPED_SLASHES );
+        //yield $MadelineProto->echo($chatJson . PHP_EOL);
+
+        $msgFront = substr(str_replace(array("\r", "\n"), '<br>', $msg), 0, 60);
+        yield $MadelineProto->echo(PHP_EOL . 'chatID: '.$chatID.'/'.$update_id.' '.$update_type.' ['.$chatTitle .'] ['.$msgFront.']'.PHP_EOL);
         $MadelineProto->logger('chatID: '.$chatID.'/'.$update_id.' '.$update_type.' '.$msgFront);
-        yield $MadelineProto->echo($chatJson . PHP_EOL);
         if ($userID === 0 &&
             isset($update['message']['to_id']['_']) &&
                   $update['message']['to_id']['_'] !== 'peerChannel') {
