@@ -1,72 +1,91 @@
-<?php
+<?php declare(strict_types=1);
 
+require_once '../../vendor/autoload.php';
 require_once(dirname(__DIR__, 1).'/Upd.php');
+require_once(dirname(__DIR__, 1).'/Store.php');
 
 class PingPlugin {
+    const PING_STATUS = 'ping.status';
+    const PING_TTL    = 'ping.ttl';
 
-    private $statusOn;
+    private $MadelineProto;
 
-    public function __construct()
+    public function __construct($MadelineProto, $store, int $selfId)
     {
-        $this->statusOn = false;
+        $this->MadelineProto = $MadelineProto;
     }
 
-    public function process($mp, $selfId, $update)
+    public function process($update)
     {
-        // chatId: -1001289749330
-        $msg   = Upd::getMsgText($update);
-        $msgId = intval($update['message']['id']);
-        $processed = true;
+        $processed = false;
+        $peerId   = Upd::getToId($update);
+        if($peerId !== -1001289749330) {
+            return false;
+        }
+        $msg = Upd::getMsgText($update);
         if ($msg && strncasecmp($msg, 'ping', 4) === 0) {
-            //$json = json_encode($update, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|
-            //                                               JSON_UNESCAPED_SLASHES);
-            //$json = ($json !== '')? $json : var_export($update, true);
-            //yield $mp->echo(PHP_EOL . PHP_EOL . $json . PHP_EOL . PHP_EOL);
-
+            $processed = true;
+            $mp       = $this->MadelineProto;
+          //$selfId   = yield $mp->__get('self_id')[0];
+            $store    = yield Store::getInstance();
+            $ttl      = yield $store->get('ping.ttl');
+            $msgId    = Upd::getMsgId($update);
+            $msgIsOut = Upd::isMsgOut($update);
             $msgEnd = strtolower(trim(substr($msg, 4)));
-            $reply = ' ';
-            $deletes = [];
-            switch ($msgEnd) {
-            case '':
-                if ($this->statusOn) {
-                    if([$update['message']['out']]) {
-                        $deletes[] = $msgId;
-                    }
-                    $deletes[] = $msgId + 1;
-                    $updates = yield $this->sendMsg($mp, $update, 'pong');
+
+            if ($msgEnd === '') {
+                $status   = yield $store->get('ping.status');
+                if ($status === 'on') {
+                    yield $this->replyMsg($mp, $peerId, $msgId, 'pong');
+                    $msgs = $msgIsOut? [$msgId, $msgId + 1] : [$msgId];
+                    yield $this->deleteMsgs($mp, $peerId, $msgs, $ttl);
                 }
-                $reply = null;
-                break;
-            case 'on':
-                $this->statusOn = true;
-                break;
-            case 'off':
-                $this->statusOn = false;
-                break;
-            case 'status':
-                break;
-            default:
-                $processed = false;
-                $reply     = null;
-                break;
             }
-            if($reply) {
-                $text = 'Ping status is ' . ($this->statusOn? 'on.' : 'off.');
-                yield $this->editMsg($mp, $update, $text);
-                $deletes[] = $msgId;
-            }
-            if(count($deletes)) {
-                yield $this->deleteMsgs($mp, $update, $deletes);
+            elseif ($msgIsOut)
+            {
+                if ($msgEnd === 'help') {
+                    yield $this->editMsg   ($mp, $peerId,  $msgId, $this->getHelpText());
+                    yield $this->deleteMsgs($mp, $peerId, [$msgId], $ttl);
+                } else {
+                    switch ($msgEnd) {
+                    case 'on':
+                        yield $store->set('ping.status', 'on');
+                        break;
+                    case 'off':
+                        yield $store->set('ping.status', 'off');
+                        break;
+                    case 'status':
+                        $status = yield $store->get('ping.status');
+                        break;
+                    default:
+                        $rest  = trim(substr($msgEnd, 4));
+                        $front = trim(substr($msgEnd, 0, 4));
+                        if ($front === 'ttl' && ctype_digit($rest)) {
+                            yield $store->set('ping.ttl', $rest);
+                        } elseif ($front === 'ttl' && $rest === 'off') {
+                            yield $store->delete('ping.ttl');
+                        } else {
+                            $processed = false;
+                        }
+                        break;
+                    }
+                    if ($processed) {
+                        $text = yield $this->getStatusText($store);
+                        yield $this->editMsg   ($mp, $peerId,  $msgId,  $text);
+                        yield $this->deleteMsgs($mp, $peerId, [$msgId], $ttl);
+                    }
+                }
             }
         }
+        return $processed;
     }
 
-    private function sendMsg($mp, $update, $text)
+    private function replyMsg($mp, $peerId, $msgId, $text)
     {
         //try {
             $updates = yield $mp->messages->sendMessage([
-                'peer'            => Upd::getToId($update),
-                'reply_to_msg_id' => $update['message']['id'],
+                'peer'            => $peerId,
+                'reply_to_msg_id' => $msgId,
                 'message'         => $text,
                 'parse_mode'      => 'HTML'
             ]);
@@ -80,26 +99,15 @@ class PingPlugin {
         //}
     }
 
-    private function editMsg($mp, $update, $text)
+    private function editMsg($mp, $peerId, $msgId, $text)
     {
         //try {
             yield $mp->messages->editMessage([
-                'peer'       => $update['message']['to_id'], //Upd::getToId ($update),
-                'id'         => $update['message']['id'],    // Upd::getMsgId($update),
+                'peer'       => $peerId,
+                'id'         => $msgId,
                 'message'    => $text,
                 'parse_mode' => 'HTML'
             ]);
-            /*
-            yield $mp->messages->deleteMessages([
-                'revoke' => true,
-                'peer'   => $update['message']['to_id'],
-                'id'     => [$update['message']['id']]
-            ]);
-            yield $mp->channels->deleteMessages([
-                'channel' => $update['message']['to_id'],
-                'id'      => [$update['message']['id']]
-            ]);
-            */
         //}
         //catch (\danog\MadelineProto\RPCErrorException $e) {
         //    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
@@ -109,18 +117,34 @@ class PingPlugin {
         //}
     }
 
-    private function deleteMsgs($mp, $peer, $msgIds) {
-        $mp->callFork((function() use ($mp, $peer, $msgIds)  {
-            yield $mp->sleep(10);
-            yield $mp->messages->deleteMessages([
-                'revoke' => true,
-                'peer'   => $peer,
-                'id'     => $msgIds
-            ]);
-            yield $mp->channels->deleteMessages([
-                'channel' => $peer,
-                'id'      => $msgIds
-            ]);
-        })());
+    private function deleteMsgs($mp, $peerId, $msgIds, $ttl) {
+        if ($ttl !== null) {
+            $mp->callFork((function () use ($mp, $peerId, $msgIds, $ttl) {
+                yield $mp->sleep($ttl);
+                yield $mp->messages->deleteMessages([
+                    'revoke' => true,
+                    'peer'   => $peerId,
+                    'id'     => $msgIds
+                ]);
+                yield $mp->channels->deleteMessages([
+                    'channel' => $peerId,
+                    'id'      => $msgIds
+                ]);
+            })());
+        }
+    }
+
+    private function getHelpText() {
+        return 'Help Text';
+    }
+
+    private function getStatusText($store) {
+        $status = yield $store->get('ping.status');
+        $status = $status === 'on'? 'ON' : 'OFF';
+
+        $ttl    = yield $store->get('ping.ttl');
+        $ttl    = $ttl === null? 'OFF' : $ttl;
+
+        return 'Ping status:' . $status . '  ttl:' . $ttl . ($ttl !== 'OFF'? ' seconds' : '');
     }
 }

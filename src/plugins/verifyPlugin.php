@@ -1,6 +1,19 @@
-<?php
+<?php declare(strict_types=1);
+
+require_once '../../vendor/autoload.php';
 
 class VerifyPlugin {
+
+    private $MadelineProto;
+    private $store;
+    private $selfId;
+
+    public function __construct($MadelineProto, $store, int $selfId)
+    {
+        $this->MadelineProto = $MadelineProto;
+        $this->store         = $store;
+        $this->selfId        = $selfId;
+    }
 
     protected function getInt($update, $index) : int {
         $value = !isset($update['message'][$index]) ?
@@ -14,8 +27,10 @@ class VerifyPlugin {
         return $value;
     }
 
-    public function process($MadelineProto, $selfId, $update)
+    public function process($update)
     {
+        $MadelineProto = $this->MadelineProto;
+
         $update_type  = $update['_'];
         $update_id    = $update['pts'];
         $userID       = $this->getInt($update,    'from_id');

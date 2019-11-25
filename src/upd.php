@@ -65,6 +65,10 @@ class Upd implements ArrayAccess
                       $update['message']['message'];
     }
 
+    public static function isMsgOut($update) : bool {
+        return !isset($update['message']['out'])? false : $update['message']['out'];
+    }
+
     public function offsetGet($offset): ?string
     {
         switch ($offset) {
