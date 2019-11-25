@@ -13,20 +13,20 @@ ini_set('log_errors',             '1');              // Error logging engine
 ini_set('error_log',              'php_errors.log'); // Logging file path
 if (file_exists('php_errors.log')) {unlink('php_errors.log');}
 
-//if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php')) {
+if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php')) {
     if (!\file_exists('madeline.php')) {
         \copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
     }
   //define('MADELINE_BRANCH', '4.2.25');
     require 'madeline.php';
-//} else {
-//    require_once '../vendor/autoload.php';
-//}
+} else {
+    require_once '../vendor/autoload.php';
+}
 require_once 'Store.php';
+require_once 'EventHandler.php';
 
 if (!file_exists('config.php')) {
     $config = '<?php' . PHP_EOL .
-    '$GLOBALS["SELF_ID"]   = 157887279;' . PHP_EOL .
     '$GLOBALS["TEST_MODE"] = TRUE;' . PHP_EOL .
     '$GLOBALS["API_ID"]    = 6;' . PHP_EOL .
     '$GLOBALS["API_HASH"]  = "eb06d4abfb49dc3eeb1aeb98ae0f581e";' . PHP_EOL .
@@ -35,30 +35,10 @@ if (!file_exists('config.php')) {
     file_put_contents('config.php', $config);
 }
 require_once 'config.php';
-require_once 'EventHandler.php';
 
-if (!file_exists('bot.lock')) {
-    touch('bot.lock');
-}
-$lock = fopen('bot.lock', 'r+');
-
-$try = 1;
-$locked = false;
-while (!$locked) {
-    $locked = flock($lock, LOCK_EX | LOCK_NB);
-    if (!$locked) {
-        closeConnection();
-        if ($try++ >= 30) {
-            \danog\MadelineProto\Logger::log('Another copy of the script is executing. Exited');
-            exit;
-        }
-        sleep(1);
-    }
-}
-
-\danog\MadelineProto\Shutdown::addCallback(static function () use ($lock) {
-    flock($lock, LOCK_UN);
-    fclose($lock);
+$msg = "Done";
+\danog\MadelineProto\Shutdown::addCallback(static function () use ($msg) {
+    echo($msg.PHP_EOL);
 });
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
