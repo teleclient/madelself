@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-require_once '../vendor/autoload.php';
+//require_once '../vendor/autoload.php';
 require_once 'Store.php';
 
 require_once 'plugins/verifyplugin.php';
@@ -15,10 +15,9 @@ class EventHandler extends \danog\MadelineProto\EventHandler
     public function __construct($MadelineProto)
     {
         parent::__construct($MadelineProto);
-        $selfId = $MadelineProto->__get('self_id')[0];
-        $store = null; //Store::getInstance();
-        $this->verifyPlugin = (new VerifyPlugin($MadelineProto, $store, $selfId));
-        $this->pingPlugin   = (new   PingPlugin($MadelineProto, $store, $selfId));
+        //$selfId = $MadelineProto->__get('self_id')[0];
+        $this->verifyPlugin = (new VerifyPlugin($MadelineProto));
+        $this->pingPlugin   = (new   PingPlugin($MadelineProto));
     }
 
     public function onUpdateEditChannelMessage($update)

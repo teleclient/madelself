@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-require_once '../../vendor/autoload.php';
+//require_once '../../vendor/autoload.php';
 require_once(dirname(__DIR__, 1).'/Upd.php');
 require_once(dirname(__DIR__, 1).'/Store.php');
 
@@ -10,7 +10,7 @@ class PingPlugin {
 
     private $MadelineProto;
 
-    public function __construct($MadelineProto, $store, int $selfId)
+    public function __construct($MadelineProto)
     {
         $this->MadelineProto = $MadelineProto;
     }

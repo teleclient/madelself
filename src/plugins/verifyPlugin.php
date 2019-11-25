@@ -1,18 +1,18 @@
 <?php declare(strict_types=1);
 
-require_once '../../vendor/autoload.php';
+//require_once '../../vendor/autoload.php';
 
 class VerifyPlugin {
 
     private $MadelineProto;
-    private $store;
-    private $selfId;
+    //private $store;
+    //private $selfId;
 
-    public function __construct($MadelineProto, $store, int $selfId)
+    public function __construct($MadelineProto)
     {
         $this->MadelineProto = $MadelineProto;
-        $this->store         = $store;
-        $this->selfId        = $selfId;
+        //$this->store         = $store;
+        //$this->selfId        = $selfId;
     }
 
     protected function getInt($update, $index) : int {
