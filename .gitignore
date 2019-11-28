@@ -13,6 +13,7 @@ config.php
 *.log
 madeline.php
 madeline.phar.version
+*.cache
 
 
 # Laravel 4 specific

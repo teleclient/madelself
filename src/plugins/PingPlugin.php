@@ -18,21 +18,19 @@ class PingPlugin {
     public function process($update)
     {
         $processed = false;
-        $peerId   = Upd::getToId($update);
-        if($peerId !== -1001289749330) {
-            return false;
-        }
+        $mp       = $this->MadelineProto;
+        $peerId    = Upd::getToId($update);
+        //if($peerId !== -1001289749330) {
+        //    return false;
+        //}
         $msg = Upd::getMsgText($update);
         if ($msg && strncasecmp($msg, 'ping', 4) === 0) {
             $processed = true;
-            $mp       = $this->MadelineProto;
-          //$selfId   = yield $mp->__get('self_id')[0];
             $store    = yield Store::getInstance();
             $ttl      = yield $store->get('ping.ttl');
             $msgId    = Upd::getMsgId($update);
             $msgIsOut = Upd::isMsgOut($update);
             $msgEnd = strtolower(trim(substr($msg, 4)));
-
             if ($msgEnd === '') {
                 $status   = yield $store->get('ping.status');
                 if ($status === 'on') {
@@ -58,11 +56,14 @@ class PingPlugin {
                         $status = yield $store->get('ping.status');
                         break;
                     default:
-                        $rest  = trim(substr($msgEnd, 4));
-                        $front = trim(substr($msgEnd, 0, 4));
-                        if ($front === 'ttl' && ctype_digit($rest)) {
+                        $space = strpos($msgEnd, ' ');
+                        $token1 = $space === false? $msgEnd : trim(substr($msgEnd, $space));
+                        $rest   = $space === false? ''      : trim(substr($msgEnd, 0, $space));
+                        var_dump($token1);
+                        var_dump($rest);
+                        if ($token1 === 'ttl' && ctype_digit($rest)) {
                             yield $store->set('ping.ttl', $rest);
-                        } elseif ($front === 'ttl' && $rest === 'off') {
+                        } elseif ($token1 === 'ttl' && $rest === 'off') {
                             yield $store->delete('ping.ttl');
                         } else {
                             $processed = false;

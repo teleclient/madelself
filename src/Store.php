@@ -1,6 +1,11 @@
 <?php
 
+require_once 'LocalKeyedMutex.php';
+require_once 'FileCache.php';
+
 use Amp\Promise;
+use Amp\Cache\FileCache;
+use Amp\Sync\LocalKeyedMutex;
 
 class Store
 {
@@ -8,18 +13,24 @@ class Store
 
     public static function getInstance()
     {
-        return !isset(self::$instance) ? self::$instance = new self : self::$instance;
+        if (!isset(self::$instance)) {
+            $directory = 'cache';
+            $mutex     = yield new LocalKeyedMutex();
+            $cache     = yield new FileCache($directory, $mutex);
+            self::$instance = yield new self($cache);
+        }
+        return self::$instance;
     }
 
     private $cache;
 
-    private function __construct()
+    private function __construct($cache)
     {
-        $this->cache = new Amp\Cache\ArrayCache();
+        $this->cache = $cache;
     }
     public function __destruct()
     {
-            $this->cache->__destruct();
+            yield $this->cache->__destruct();
     }
 
     public function set(string $key, string $value): Promise

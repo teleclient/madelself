@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php declare(strict_types=1);
 /* MadelineProto UserBot Starter By:Esfandyar Shayan @WebWarp */
 
@@ -6,8 +5,11 @@
 
 date_default_timezone_set('Asia/Tehran');
 ini_set('memory_limit', '2048M');
+ignore_user_abort(true);
+set_time_limit(0);
 error_reporting(E_ALL);                              // always TRUE
 ini_set('ignore_repeated_errors', '1');              // always TRUE
+ini_set('display_startup_errors', '1');
 ini_set('display_errors',         '1');              // FALSE only in production or real server
 ini_set('log_errors',             '1');              // Error logging engine
 ini_set('error_log',              'php_errors.log'); // Logging file path
@@ -26,9 +28,9 @@ require_once 'Store.php';
 require_once 'EventHandler.php';
 
 if (!file_exists('config.php')) {
-    $config = '<?php' . PHP_EOL .
+    $config = '<?php'               . PHP_EOL .
     '$GLOBALS["TEST_MODE"] = TRUE;' . PHP_EOL .
-    '$GLOBALS["API_ID"]    = 6;' . PHP_EOL .
+    '$GLOBALS["API_ID"]    = 6;'    . PHP_EOL .
     '$GLOBALS["API_HASH"]  = "eb06d4abfb49dc3eeb1aeb98ae0f581e";' . PHP_EOL .
     PHP_EOL;
     var_export($config);
@@ -36,9 +38,12 @@ if (!file_exists('config.php')) {
 }
 require_once 'config.php';
 
+$pid = getmypid();
+echo ($pid.PHP_EOL);
+
 $msg = "Done";
 \danog\MadelineProto\Shutdown::addCallback(static function () use ($msg) {
-    echo($msg.PHP_EOL);
+    //echo($msg.PHP_EOL);
 });
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
@@ -53,7 +58,7 @@ $MadelineProto->async(true);
 $MadelineProto->loop(function() use($MadelineProto) {
     yield $MadelineProto->start();
     yield Store::getInstance();
-    $self   = yield $MadelineProto->get_self();
+    $self = yield $MadelineProto->get_self();
     yield $MadelineProto->__set('self_id', [$self['id']]);
     yield $MadelineProto->setEventHandler(EventHandler::class);
 });
