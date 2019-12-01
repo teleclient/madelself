@@ -1,12 +1,9 @@
 <?php declare(strict_types=1);
 
-//require_once '../../vendor/autoload.php';
 require_once(dirname(__DIR__, 1).'/Upd.php');
 require_once(dirname(__DIR__, 1).'/Store.php');
 
 class PingPlugin {
-    const PING_STATUS = 'ping.status';
-    const PING_TTL    = 'ping.ttl';
 
     private $MadelineProto;
 
@@ -18,7 +15,7 @@ class PingPlugin {
     public function process($update)
     {
         $processed = false;
-        $mp       = $this->MadelineProto;
+        $mp        = $this->MadelineProto;
         $peerId    = Upd::getToId($update);
         //if($peerId !== -1001289749330) {
         //    return false;
@@ -26,13 +23,12 @@ class PingPlugin {
         $msg = Upd::getMsgText($update);
         if ($msg && strncasecmp($msg, 'ping', 4) === 0) {
             $processed = true;
-            $store    = yield Store::getInstance();
-            $ttl      = yield $store->get('ping.ttl');
-            $msgId    = Upd::getMsgId($update);
-            $msgIsOut = Upd::isMsgOut($update);
-            $msgEnd = strtolower(trim(substr($msg, 4)));
+            $msgId     = Upd::getMsgId($update);
+            $msgIsOut  = Upd::isMsgOut($update);
+            $ttl       = yield $this->pingTtl();
+            $msgEnd    = strtolower(trim(substr($msg, 4)));
             if ($msgEnd === '') {
-                $status   = yield $store->get('ping.status');
+                $status   = yield $this->pingStatus();
                 if ($status === 'on') {
                     yield $this->replyMsg($mp, $peerId, $msgId, 'pong');
                     $msgs = $msgIsOut? [$msgId, $msgId + 1] : [$msgId];
@@ -47,31 +43,26 @@ class PingPlugin {
                 } else {
                     switch ($msgEnd) {
                     case 'on':
-                        yield $store->set('ping.status', 'on');
+                        yield $this->pingStatus('on');
                         break;
                     case 'off':
-                        yield $store->set('ping.status', 'off');
+                        yield $this->pingStatus('off');
                         break;
                     case 'status':
-                        $status = yield $store->get('ping.status');
                         break;
                     default:
                         $space = strpos($msgEnd, ' ');
-                        $token1 = $space === false? $msgEnd : trim(substr($msgEnd, $space));
-                        $rest   = $space === false? ''      : trim(substr($msgEnd, 0, $space));
-                        var_dump($token1);
-                        var_dump($rest);
-                        if ($token1 === 'ttl' && ctype_digit($rest)) {
-                            yield $store->set('ping.ttl', $rest);
-                        } elseif ($token1 === 'ttl' && $rest === 'off') {
-                            yield $store->delete('ping.ttl');
+                        $token1 = ($space === false)? ''      : trim(substr($msgEnd, 0, $space));
+                        $rest   = ($space === false)? $msgEnd : trim(substr($msgEnd,    $space));
+                        if ($token1 === 'ttl' && ($rest === 'off' || ctype_digit($rest))) {
+                            yield $this->pingTtl($rest);
                         } else {
                             $processed = false;
                         }
                         break;
                     }
                     if ($processed) {
-                        $text = yield $this->getStatusText($store);
+                        $text = yield $this->getStatusText();
                         yield $this->editMsg   ($mp, $peerId,  $msgId,  $text);
                         yield $this->deleteMsgs($mp, $peerId, [$msgId], $ttl);
                     }
@@ -119,7 +110,7 @@ class PingPlugin {
     }
 
     private function deleteMsgs($mp, $peerId, $msgIds, $ttl) {
-        if ($ttl !== null) {
+        if ($ttl !== 'off') {
             $mp->callFork((function () use ($mp, $peerId, $msgIds, $ttl) {
                 yield $mp->sleep($ttl);
                 yield $mp->messages->deleteMessages([
@@ -136,16 +127,53 @@ class PingPlugin {
     }
 
     private function getHelpText() {
-        return 'Help Text';
+        return
+        "Ping Instructions:<br>" .
+        "<br>" .
+        "ping help      Show this help text.<br>." .
+        "ping status    Shows the status of the feature<br>." .
+        "ping on        Turns on the ping feature.<br>" .
+        "Ping off       Turns off the ping feature.<br>" .
+        "ping ttl off   Ping messages will not be.<br>" .
+        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      deleted." .
+        "ping ttl 47    Ping messages will be<br>" .
+        "               deleted after 47 seconds.<br>";
     }
 
-    private function getStatusText($store) {
-        $status = yield $store->get('ping.status');
-        $status = $status === 'on'? 'ON' : 'OFF';
+    private function getStatusText() {
+        $status = yield $this->pingStatus();
+        $ttl    = yield $this->pingTtl();
+        return 'Ping status:' . ($status === 'on'? 'ON' : 'OFF') .
+                  '  ttl:' . ($ttl === 'off'? 'OFF' : ($ttl . ' seconds'));
+    }
 
-        $ttl    = yield $store->get('ping.ttl');
-        $ttl    = $ttl === null? 'OFF' : $ttl;
+    private function pingStatus(?string $value = null) {
+        $store = yield Store::getInstance();
+        if ($value === null) {
+            $fetched = yield $store->get('ping.status');
+            return $fetched === 'on'? 'on' : 'off';
+        } else {
+            $value = strtolower(trim($value));
+            if ('on' === $value || 'off' === $value) {
+                yield $store->set('ping.status', $value);
+                return $value;
+            }
+        }
+        throw new Exception();
+    }
 
-        return 'Ping status:' . $status . '  ttl:' . $ttl . ($ttl !== 'OFF'? ' seconds' : '');
+    private function pingTtl(?string $value = null) {
+        $store = yield Store::getInstance();
+        if ($value === null) {
+            $fetched = yield $store->get('ping.ttl');
+            return $fetched === null? 'off' : $fetched;
+        } else {
+            $value = strtolower(trim($value));
+            if ('off' === $value || ctype_digit($value)) {
+                yield $store->set('ping.ttl', $value);
+                return $value;
+            }
+        }
+        throw new Exception();
     }
 }
