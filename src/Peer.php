@@ -1,6 +1,9 @@
 <?php
 
-class Peer implements ArrayAccess {
+namespace teleclient\madelbase;
+
+
+class Peer implements \ArrayAccess {
 
     public $peer;
 

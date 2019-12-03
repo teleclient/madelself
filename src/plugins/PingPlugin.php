@@ -1,45 +1,49 @@
 <?php declare(strict_types=1);
 
+namespace teleclient\madelbase\plugin;
+
 require_once(dirname(__DIR__, 1).'/Upd.php');
 require_once(dirname(__DIR__, 1).'/Store.php');
 
+use \teleclient\madelbase\Upd;
+use \teleclient\madelbase\Store;
+
+
 class PingPlugin {
 
-    private $MadelineProto;
+    private $CombinedMadelineProto;
 
-    public function __construct($MadelineProto)
+    public function __construct($CombinedMadelineProto)
     {
-        $this->MadelineProto = $MadelineProto;
+        $this->CombinedMadelineProto = $CombinedMadelineProto;
     }
 
-    public function process($update)
+    public function process($update, $session)
     {
-        $processed = false;
-        $mp        = $this->MadelineProto;
-        $peerId    = Upd::getToId($update);
-        //if($peerId !== -1001289749330) {
-        //    return false;
-        //}
+        $MadelineProto = $this->CombinedMadelineProto->instances[$session];
+
+        $processed     = false;
         $msg = Upd::getMsgText($update);
         if ($msg && strncasecmp($msg, 'ping', 4) === 0) {
             $processed = true;
             $msgId     = Upd::getMsgId($update);
-            $msgIsOut  = Upd::isMsgOut($update);
+            $msgIsOut  = Upd::isMsgOutward($update);
+            $peerId    = Upd::getToId($update);
             $ttl       = yield $this->pingTtl();
             $msgEnd    = strtolower(trim(substr($msg, 4)));
             if ($msgEnd === '') {
-                $status   = yield $this->pingStatus();
+                $status = yield $this->pingStatus();
                 if ($status === 'on') {
-                    yield $this->replyMsg($mp, $peerId, $msgId, 'pong');
+                    yield $this->replyMsg($MadelineProto, $peerId, $msgId, 'pong');
                     $msgs = $msgIsOut? [$msgId, $msgId + 1] : [$msgId];
-                    yield $this->deleteMsgs($mp, $peerId, $msgs, $ttl);
+                    yield $this->deleteMsgs($MadelineProto, $peerId, $msgs, $ttl);
                 }
             }
             elseif ($msgIsOut)
             {
                 if ($msgEnd === 'help') {
-                    yield $this->editMsg   ($mp, $peerId,  $msgId, $this->getHelpText());
-                    yield $this->deleteMsgs($mp, $peerId, [$msgId], $ttl);
+                    yield $this->editMsg   ($MadelineProto, $peerId,  $msgId, $this->getHelpText());
+                    yield $this->deleteMsgs($MadelineProto, $peerId, [$msgId], $ttl);
                 } else {
                     switch ($msgEnd) {
                     case 'on':
@@ -63,8 +67,8 @@ class PingPlugin {
                     }
                     if ($processed) {
                         $text = yield $this->getStatusText();
-                        yield $this->editMsg   ($mp, $peerId,  $msgId,  $text);
-                        yield $this->deleteMsgs($mp, $peerId, [$msgId], $ttl);
+                        yield $this->editMsg   ($MadelineProto, $peerId,  $msgId,  $text);
+                        yield $this->deleteMsgs($MadelineProto, $peerId, [$msgId], $ttl);
                     }
                 }
             }
@@ -74,7 +78,7 @@ class PingPlugin {
 
     private function replyMsg($mp, $peerId, $msgId, $text)
     {
-        //try {
+        try {
             $updates = yield $mp->messages->sendMessage([
                 'peer'            => $peerId,
                 'reply_to_msg_id' => $msgId,
@@ -82,62 +86,65 @@ class PingPlugin {
                 'parse_mode'      => 'HTML'
             ]);
             return $updates;
-        //}
-        //catch (\danog\MadelineProto\RPCErrorException $e) {
-        //    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
-        //}
-        //catch (\danog\MadelineProto\Exception $e) {
-        //    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
-        //}
+        } catch (\danog\MadelineProto\RPCErrorException $e) {
+            \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+        } catch (\danog\MadelineProto\Exception $e) {
+            \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+        }
     }
 
     private function editMsg($mp, $peerId, $msgId, $text)
     {
-        //try {
+        try {
             yield $mp->messages->editMessage([
                 'peer'       => $peerId,
                 'id'         => $msgId,
                 'message'    => $text,
                 'parse_mode' => 'HTML'
             ]);
-        //}
-        //catch (\danog\MadelineProto\RPCErrorException $e) {
-        //    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
-        //}
-        //catch (\danog\MadelineProto\Exception $e) {
-        //    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
-        //}
+        } catch (\danog\MadelineProto\RPCErrorException $e) {
+            \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+        } catch (\danog\MadelineProto\Exception $e) {
+            \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+        }
     }
 
     private function deleteMsgs($mp, $peerId, $msgIds, $ttl) {
         if ($ttl !== 'off') {
             $mp->callFork((function () use ($mp, $peerId, $msgIds, $ttl) {
                 yield $mp->sleep($ttl);
-                yield $mp->messages->deleteMessages([
-                    'revoke' => true,
-                    'peer'   => $peerId,
-                    'id'     => $msgIds
-                ]);
-                yield $mp->channels->deleteMessages([
-                    'channel' => $peerId,
-                    'id'      => $msgIds
-                ]);
+                try {
+                        yield $mp->messages->deleteMessages([
+                        'revoke' => true,
+                        'peer'   => $peerId,
+                        'id'     => $msgIds
+                    ]);
+                        yield $mp->channels->deleteMessages([
+                        'channel' => $peerId,
+                        'id'      => $msgIds
+                    ]);
+                } catch (\danog\MadelineProto\RPCErrorException $e) {
+                    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+                } catch (\danog\MadelineProto\Exception $e) {
+                    \danog\MadelineProto\Logger::log((string)$e, \danog\MadelineProto\Logger::FATAL_ERROR);
+                }
             })());
         }
     }
 
     private function getHelpText() {
         return
-        "Ping Instructions:<br>" .
+        "<b>Ping Instructions:</b><br>" .
         "<br>" .
-        "ping help      Show this help text.<br>." .
-        "ping status    Shows the status of the feature<br>." .
-        "ping on        Turns on the ping feature.<br>" .
-        "Ping off       Turns off the ping feature.<br>" .
-        "ping ttl off   Ping messages will not be.<br>" .
-        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      deleted." .
-        "ping ttl 47    Ping messages will be<br>" .
-        "               deleted after 47 seconds.<br>";
+        "<b>ping help</b>      Shows this help text.<br>" .
+        "<b>ping status</b>  Shows the status of the<br>" .
+        " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; feature.<br>" .
+        "<b>ping on</b>        Turns on the ping feature.<br>" .
+        "<b>ping off</b>       Turns off the ping feature.<br>" .
+        "<b>ping ttl off</b>   Ping messages will not be<br>" .
+        " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; deleted.<br>" .
+        "<b>ping ttl 47</b>   Ping messages will be<br>" .
+        " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; deleted after 47 seconds.<br>";
     }
 
     private function getStatusText() {

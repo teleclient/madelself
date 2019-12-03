@@ -1,5 +1,7 @@
 <?php
 
+namespace teleclient\madelbase;
+
 require_once 'LocalKeyedMutex.php';
 require_once 'FileCache.php';
 

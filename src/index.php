@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 /* MadelineProto UserBot Starter By:Esfandyar Shayan @WebWarp */
 
+namespace teleclient\madelbase;
+
 \set_include_path(\get_include_path().PATH_SEPARATOR.dirname(__DIR__, 1));
 
 date_default_timezone_set('Asia/Tehran');
@@ -25,7 +27,7 @@ if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEP
     require_once '../vendor/autoload.php';
 }
 require_once 'Store.php';
-require_once 'EventHandler.php';
+require_once 'CombinedEventHandler.php';
 
 if (!file_exists('config.php')) {
     $config = '<?php'               . PHP_EOL .
@@ -38,28 +40,38 @@ if (!file_exists('config.php')) {
 }
 require_once 'config.php';
 
+if (!file_exists('cache') || !is_dir('cache')) {
+    mkdir('cache');
+}
+
 $pid = getmypid();
 echo ($pid.PHP_EOL);
 
 $msg = "Done";
-\danog\MadelineProto\Shutdown::addCallback(static function () use ($msg) {
-    //echo($msg.PHP_EOL);
+\danog\MadelineProto\Shutdown::addCallback(function () use ($msg) {
+    echo($msg.PHP_EOL);
 });
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
-$settings['logger']['logger_level'] = \danog\MadelineProto\Logger::ULTRA_VERBOSE;
-$settings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
-$settings['app_info']['api_id']     = $GLOBALS['API_ID'];
-$settings['app_info']['api_hash']   = $GLOBALS['API_HASH'];
-$settings['serialization']['cleanup_before_serialization'] = true;
+$BotSettings['logger']['logger_level'] = \danog\MadelineProto\Logger::FATAL_ERROR;
+$BotSettings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
+$BotSettings['serialization']['cleanup_before_serialization'] = true;
+$BotSettings['serialization']['serialization_interval']       = 60;
+$UserSettings = $BotSettings;
+$UserSettings['app_info']['api_id']   = $GLOBALS['API_ID'];
+$UserSettings['app_info']['api_hash'] = $GLOBALS['API_HASH'];
 
-$MadelineProto = new \danog\MadelineProto\API('session.madeline', $settings);
-$MadelineProto->async(true);
-$MadelineProto->loop(function() use($MadelineProto) {
-    yield $MadelineProto->start();
-    yield Store::getInstance();
-    $self = yield $MadelineProto->get_self();
-    yield $MadelineProto->__set('self_id', [$self['id']]);
-    yield $MadelineProto->setEventHandler(EventHandler::class);
+$CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined_session.madeline',  [
+     'bot.madeline' =>  $BotSettings,
+    'user.madeline' => $UserSettings
+]);
+$CombinedMadelineProto->async(true);
+$CombinedMadelineProto->loop(function() use($CombinedMadelineProto) {
+    \danog\MadelineProto\Logger::log('Bot  login', \danog\MadelineProto\Logger::WARNING);
+    $res[] = $CombinedMadelineProto->instances['bot.madeline']->start();
+    \danog\MadelineProto\Logger::log('User login', \danog\MadelineProto\Logger::WARNING);
+    $res[] = $CombinedMadelineProto->instances['user.madeline']->start();
+    yield $CombinedMadelineProto->all($res);
+    yield $CombinedMadelineProto->setEventHandler("\\teleclient\\madelbase\\CombinedEventHandler");
 });
-$MadelineProto->loop();
+$CombinedMadelineProto->loop();

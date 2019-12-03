@@ -1,8 +1,10 @@
 <?php
 
+namespace teleclient\madelbase;
+
 require_once 'Peer.php';
 
-class Upd implements ArrayAccess
+class Upd implements \ArrayAccess
 {
     public $update;
     public $message;
@@ -65,7 +67,7 @@ class Upd implements ArrayAccess
                       $update['message']['message'];
     }
 
-    public static function isMsgOut($update) : bool {
+    public static function isMsgOutward($update) : bool {
         return !isset($update['message']['out'])? false : $update['message']['out'];
     }
 
