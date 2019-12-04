@@ -34,6 +34,7 @@ if (!file_exists('config.php')) {
     '$GLOBALS["TEST_MODE"] = TRUE;' . PHP_EOL .
     '$GLOBALS["API_ID"]    = 6;'    . PHP_EOL .
     '$GLOBALS["API_HASH"]  = "eb06d4abfb49dc3eeb1aeb98ae0f581e";' . PHP_EOL .
+    '$GLOBALS["BOT_TOKEN"] = "1234567890:ABCDEFGH-WhweDNtcNckxt7RyFo-dXrFLw";' . PHP_EOL;
     PHP_EOL;
     var_export($config);
     file_put_contents('config.php', $config);
@@ -53,25 +54,48 @@ $msg = "Done";
 });
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
-$BotSettings['logger']['logger_level'] = \danog\MadelineProto\Logger::FATAL_ERROR;
-$BotSettings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
-$BotSettings['serialization']['cleanup_before_serialization'] = true;
-$BotSettings['serialization']['serialization_interval']       = 60;
-$UserSettings = $BotSettings;
-$UserSettings['app_info']['api_id']   = $GLOBALS['API_ID'];
-$UserSettings['app_info']['api_hash'] = $GLOBALS['API_HASH'];
+$BotSettings['logger']['logger_level'] = \danog\MadelineProto\Logger::WARNING;
+$botSettings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
+$botSettings['serialization']['cleanup_before_serialization'] = true;
+$botSettings['serialization']['serialization_interval']       = 60;
+$botSettings['app_info']['api_id']   = $GLOBALS['API_ID'];
+$botSettings['app_info']['api_hash'] = $GLOBALS['API_HASH'];
+$token = $GLOBALS['BOT_TOKEN'];
+$userSettings = $botSettings;
 
-$CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined_session.madeline',  [
-     'bot.madeline' =>  $BotSettings,
-    'user.madeline' => $UserSettings
+$CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined_session.madeline', [
+    'bot.madeline' =>  $botSettings,
+    'user.madeline' => $userSettings
 ]);
+
 $CombinedMadelineProto->async(true);
-$CombinedMadelineProto->loop(function() use($CombinedMadelineProto) {
-    \danog\MadelineProto\Logger::log('Bot  login', \danog\MadelineProto\Logger::WARNING);
-    $res[] = $CombinedMadelineProto->instances['bot.madeline']->start();
-    \danog\MadelineProto\Logger::log('User login', \danog\MadelineProto\Logger::WARNING);
-    $res[] = $CombinedMadelineProto->instances['user.madeline']->start();
-    yield $CombinedMadelineProto->all($res);
+$CombinedMadelineProto->serialization_interval = 60;
+$CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $token) {
+
+    $botSession = 'bot.madeline';
+    $botAuthorization = yield $CombinedMadelineProto->instances[$botSession]->bot_login($token);
+    \danog\MadelineProto\Logger::log('Bot login:', \danog\MadelineProto\Logger::WARNING);
+    $promises[] = $CombinedMadelineProto->instances[$botSession]->start();
+
+    $userSession = 'user.madeline';
+    \danog\MadelineProto\Logger::log('User login:', \danog\MadelineProto\Logger::WARNING);
+    $promises[] = $CombinedMadelineProto->instances[$userSession]->start();
+
+    yield $CombinedMadelineProto->all($promises);
     yield $CombinedMadelineProto->setEventHandler("\\teleclient\\madelbase\\CombinedEventHandler");
+
+    //$json = json_encode($botAuthorization, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    //$json = ($json !== '')? $json : var_export($botAuthorization, true);
+    //yield $CombinedMadelineProto->instances[$botSession]->echo($json.PHP_EOL);
+
+    $bot = yield $CombinedMadelineProto->instances[$botSession]->get_self();
+    $json = json_encode($bot, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    $json = ($json !== '')? $json : var_export($bot, true);
+    yield $CombinedMadelineProto->instances[$botSession]->echo($json.PHP_EOL);
+
+    $user = yield $CombinedMadelineProto->instances[$userSession]->get_self();
+    $json = json_encode($user, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    $json = ($json !== '')? $json : var_export($user, true);
+    yield $CombinedMadelineProto->instances[$userSession]->echo($json.PHP_EOL);
 });
 $CombinedMadelineProto->loop();

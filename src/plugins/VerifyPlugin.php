@@ -35,14 +35,24 @@ class VerifyPlugin {
         $msgID        = $this->getInt($update,    'id');
         $msg          = $this->getString($update, 'message');
         $replyToMsgID = $this->getInt($update,    'reply_to_msg_id');//This is a reply to some other msg
+
         $chatInfo     = yield $MadelineProto->get_info($update);
         $chatID       = intval($chatInfo['bot_api_id']);
         $chatType     = $chatInfo['type']; //Can be either “private”, “group”, “supergroup” or “channel”
         $chatTitle    = !isset($chatInfo['Chat']['title'])? ' ' : $chatInfo['Chat']['title'];
+        if(isset($chatInfo['User']['username'])) {
+            $chatTitle =$chatInfo['User']['username'];
+        }
+        //yield $MadelineProto->echo($this->jsonStr($chatInfo).PHP_EOL);
 
         $msgFront = substr(str_replace(array("\r", "\n"), '<br>', $msg), 0, 60);
-        yield $MadelineProto->echo(PHP_EOL . 'chatID: '.$chatID.'/'.$update_id.' '.$update_type.
-                                  ' ['.$chatTitle .'] ['.$msgFront.']'.PHP_EOL);
+        yield $MadelineProto->echo(PHP_EOL . $session . '  ' .
+                                  'chatID:' . $chatID . '/' . $msgID . '  ' .
+                                  $update_type . '/' . $update_id .
+                                  '  ' . $chatType . ':[' . $chatTitle . ']' .
+                                  '  msg:[' . $msgFront . ']' . PHP_EOL);
+        $MadelineProto->echo($this->jsonStr($update).PHP_EOL);
+
         if ($userID === 0 &&
             isset($update['message']['to_id']['_']) &&
                   $update['message']['to_id']['_'] !== 'peerChannel')
