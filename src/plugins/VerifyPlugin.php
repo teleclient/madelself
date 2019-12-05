@@ -51,7 +51,7 @@ class VerifyPlugin {
                                   $update_type . '/' . $update_id .
                                   '  ' . $chatType . ':[' . $chatTitle . ']' .
                                   '  msg:[' . $msgFront . ']' . PHP_EOL);
-        $MadelineProto->echo($this->jsonStr($update).PHP_EOL);
+        //$MadelineProto->echo($this->jsonStr($update).PHP_EOL);
 
         if ($userID === 0 &&
             isset($update['message']['to_id']['_']) &&

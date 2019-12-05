@@ -24,7 +24,7 @@ class PingPlugin {
 
         $processed     = false;
         $msg = Upd::getMsgText($update);
-        if ($msg && strncasecmp($msg, 'ping', 4) === 0) {
+        if (strncasecmp($session, 'bot', 3) !== 0 && $msg && strncasecmp($msg, 'ping', 4) === 0) {
             $processed = true;
             $msgId     = Upd::getMsgId($update);
             $msgIsOut  = Upd::isMsgOutward($update);

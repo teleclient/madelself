@@ -5,6 +5,19 @@ namespace teleclient\madelbase;
 
 \set_include_path(\get_include_path().PATH_SEPARATOR.dirname(__DIR__, 1));
 
+function registerSession($CombinedMadelineProto, string $session) {
+    $self = yield $CombinedMadelineProto->instances[$session]->get_self();
+
+    $isBot = isset($self['bot'])? $self['bot'] : null;
+    yield $CombinedMadelineProto->instances[$session]->echo(($isBot? 'BOT' : 'USER')  .PHP_EOL);
+
+    $dump = json_encode($self, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    $dump = ($dump !== '')? $dump : var_export($self, true);
+    yield $CombinedMadelineProto->instances[$session]->echo($dump.PHP_EOL);
+
+    return $self;
+}
+
 date_default_timezone_set('Asia/Tehran');
 ini_set('memory_limit', '2048M');
 ignore_user_abort(true);
@@ -74,28 +87,17 @@ $CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $token) {
 
     $botSession = 'bot.madeline';
     $botAuthorization = yield $CombinedMadelineProto->instances[$botSession]->bot_login($token);
-    \danog\MadelineProto\Logger::log('Bot login:', \danog\MadelineProto\Logger::WARNING);
+    //\danog\MadelineProto\Logger::log('Bot login:', \danog\MadelineProto\Logger::WARNING);
     $promises[] = $CombinedMadelineProto->instances[$botSession]->start();
 
     $userSession = 'user.madeline';
-    \danog\MadelineProto\Logger::log('User login:', \danog\MadelineProto\Logger::WARNING);
+    //\danog\MadelineProto\Logger::log('User login:', \danog\MadelineProto\Logger::WARNING);
     $promises[] = $CombinedMadelineProto->instances[$userSession]->start();
 
     yield $CombinedMadelineProto->all($promises);
     yield $CombinedMadelineProto->setEventHandler("\\teleclient\\madelbase\\CombinedEventHandler");
 
-    //$json = json_encode($botAuthorization, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    //$json = ($json !== '')? $json : var_export($botAuthorization, true);
-    //yield $CombinedMadelineProto->instances[$botSession]->echo($json.PHP_EOL);
-
-    $bot = yield $CombinedMadelineProto->instances[$botSession]->get_self();
-    $json = json_encode($bot, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    $json = ($json !== '')? $json : var_export($bot, true);
-    yield $CombinedMadelineProto->instances[$botSession]->echo($json.PHP_EOL);
-
-    $user = yield $CombinedMadelineProto->instances[$userSession]->get_self();
-    $json = json_encode($user, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    $json = ($json !== '')? $json : var_export($user, true);
-    yield $CombinedMadelineProto->instances[$userSession]->echo($json.PHP_EOL);
+    yield registerSession($CombinedMadelineProto,  $botSession);
+    yield registerSession($CombinedMadelineProto, $userSession);
 });
 $CombinedMadelineProto->loop();
