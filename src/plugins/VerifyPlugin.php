@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace teleclient\madelbase\plugin;
+namespace teleclient\madelbase\plugins;
 
 class VerifyPlugin {
 

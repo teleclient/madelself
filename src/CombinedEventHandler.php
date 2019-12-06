@@ -7,7 +7,8 @@ require_once 'Store.php';
 require_once __DIR__ . "/plugins/VerifyPlugin.php";
 require_once __DIR__ . "/plugins/PingPlugin.php";
 
-use teleclient\madelbase\plugin;
+use teleclient\madelbase\plugins\VerifyPlugin;
+use teleclient\madelbase\plugins\PingPlugin;
 
 class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
 {
@@ -17,8 +18,8 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
     public function __construct($CombinedMadelineProto)
     {
         parent::__construct($CombinedMadelineProto);
-        $this->verifyPlugin = new \teleclient\madelbase\plugin\VerifyPlugin($CombinedMadelineProto);
-        $this->pingPlugin   = new \teleclient\madelbase\plugin\PingPlugin  ($CombinedMadelineProto);
+        $this->verifyPlugin = new VerifyPlugin($CombinedMadelineProto);
+        $this->pingPlugin   = new PingPlugin  ($CombinedMadelineProto);
     }
 
     public function __magic_sleep() {

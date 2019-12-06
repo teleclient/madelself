@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace teleclient\madelbase\plugin;
+namespace teleclient\madelbase\plugins;
 
 require_once(dirname(__DIR__, 1).'/Upd.php');
 require_once(dirname(__DIR__, 1).'/Store.php');
