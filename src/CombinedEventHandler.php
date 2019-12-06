@@ -4,8 +4,8 @@ namespace teleclient\madelbase;
 
 require_once 'Store.php';
 
-require_once 'plugins/verifyplugin.php';
-require_once 'plugins/pingplugin.php';
+require_once __DIR__ . "/plugins/VerifyPlugin.php";
+require_once __DIR__ . "/plugins/PingPlugin.php";
 
 use teleclient\madelbase\plugin;
 
