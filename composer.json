@@ -2,29 +2,9 @@
     "name": "teleclient/madelbase",
     "description": "A base project for Telegram userbots using MadelineProto library",
     "type": "project",
-    "support": {
-        "issues": "https://github.com/teleclient/madelbase/issues"
-    },
     "require": {
-        "php": ">=7.2",
-        "amphp/file": "~0.3",
-        "danog/madelineproto": "4.2.25",
-        "amphp/dns": "dev-master#aa1892bd as 0.9",
-        "amphp/socket": "0.10.12 as 1",
-        "amphp/websocket": "dev-master#db2da8c5b3ed22eae37da5ffa10ab3ea8de19342 as 1",
-        "amphp/websocket-client": "dev-master#aff808025637bd705672338b4904ad03a4dbdc04 as 1",
-        "clue/reactphp-sqlite": "1.0.1"
+        "danog/madelineproto": "^5.0"
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/teleclient/madelbase"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/danog/phpseclib"
-        }
-    ],
     "minimum-stability": "dev",
     "license": "AGPL-3.0-only",
     "authors": [
@@ -37,18 +17,5 @@
         "psr-4": {
             "teleclient\\madelbase\\": "src"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "teleclient\\madelbase\\tests\\": "test"
-        }
-    },
-    "scripts": {
-        "check": [
-            "@code-style",
-            "@test"
-        ],
-        "code-style": "php-cs-fixer fix -v --diff",
-        "test": "@php -dzend.assertions=1 -dassert.exception=1 ./vendor/bin/phpunit --coverage-text"
     }
 }

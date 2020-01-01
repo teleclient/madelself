@@ -34,7 +34,7 @@ if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEP
     if (!\file_exists('madeline.php')) {
         \copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
     }
-    //define('MADELINE_BRANCH', '4.2.25');
+  //define('MADELINE_BRANCH', '4.2.25');
     require 'madeline.php';
 } else {
     require_once '../vendor/autoload.php';
@@ -62,7 +62,7 @@ $pid = getmypid();
 echo ($pid.PHP_EOL);
 
 $msg = "Done";
-\danog\MadelineProto\Shutdown::addCallback(static function () use ($msg) {
+\danog\MadelineProto\Shutdown::addCallback(function () use ($msg) {
     echo($msg.PHP_EOL);
 });
 
@@ -70,7 +70,7 @@ if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
 
 function getSettings() {
     $settings['logger']['logger_level'] = \danog\MadelineProto\Logger::ULTRA_VERBOSE;
-    $settings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
+  //$settings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
     $settings['serialization']['serialization_interval'] = 60;
     $settings['app_info']['api_id']   = $GLOBALS['API_ID'];
     $settings['app_info']['api_hash'] = $GLOBALS['API_HASH'];
@@ -93,10 +93,56 @@ function getSettings() {
 }
 
 $botSettings = getSettings();
+$userSettings = $botSettings;
+$botSettings['app_info']['bot_token'] = $GLOBALS['BOT_TOKEN'];
 $token = $GLOBALS['BOT_TOKEN'];
 $botSettings['app_info']['bot_auth_token'] = $GLOBALS['BOT_TOKEN'];
 $userSettings = getSettings();
 
+use \danog\MadelineProto\MTProto;
+use \danog\MadelineProto\Logger;
+use \danog\MadelineProto\DataCenter;
+use Amp\Artax\Cookie\ArrayCookieJar;
+use Amp\Artax\Request;
+use Amp\Artax\Response;
+use Amp\Artax\DefaultClient;
+use Amp\Loop;
+
+const SERVER_URL = 'https://teleclient.000webhostapp.com/';
+/*
+Loop::run( function() {
+    $client = new DefaultClient;
+    $response = yield $client->request('https://httpbin.org/user-agent');
+    printf(
+        "HTTP/%s %d %s\n\n",
+        $response->getProtocolVersion(),
+        $response->getStatus(),
+        $response->getReason()
+    );
+});
+die;
+$jar        = new ArrayCookieJar();
+$settings   = \danog\MadelineProto\MTProto::getSettings([]);
+var_export($settings);
+$datacenter = new DataCenter(
+    new class($settings) {
+        public function __construct($settings)
+        {
+            $this->logger = Logger::getLoggerFromSettings($settings);
+        }
+
+    },
+    [],
+    $settings['connection_settings'],
+    true,
+    $jar
+);
+
+$request  = new Request(SERVER_URL.':80', 'GET');
+$response = $datacenter->getHTTPClient()->request($request);
+$result   = $response->getBody();
+die;
+*/
 $CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined_session.madeline', [
      'bot.madeline' =>  $botSettings,
     'user.madeline' => $userSettings,
@@ -104,17 +150,23 @@ $CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined_session.
 
 $CombinedMadelineProto->settings['logger']['logger_level'] = \danog\MadelineProto\Logger::FATAL_ERROR;
 $CombinedMadelineProto->settings['logger']['logger']       = \danog\MadelineProto\Logger::FILE_LOGGER;
-$CombinedMadelineProto->settings['serialization']['serialization_interval'] = 600;
-//$CombinedMadelineProto->{'user.madeline'}->settings['connection']['main']['ipv4'][2]['ip_address'] = '149.154.167.50';
+$CombinedMadelineProto->settings['serialization']['serialization_interval'] = 120;
+$CombinedMadelineProto->{'user.madeline'}->settings['connection']['main']['ipv4'][2]['ip_address'] = '149.154.167.50';
 
 $CombinedMadelineProto->async(true);
 
 $CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $token) {
 
+
+});
+die;
+
+$CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $token) {
+
     $botSession = 'bot.madeline';
-    //$token = $CombinedMadelineProto->{$botSession}->settings['app_info']['bot_auth_token']?? null;
+    $token = $CombinedMadelineProto->{$botSession}->settings['app_info']['bot_auth_token']?? null;
     if ($token) {
-        yield $CombinedMadelineProto->instances[$botSession]->botLogin($token);
+        yield $CombinedMadelineProto->instances[$botSession]->bot_login($token);
     }
     $promises[] = $CombinedMadelineProto->instances[$botSession]->start();
 
