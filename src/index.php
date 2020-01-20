@@ -40,7 +40,7 @@ if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEP
     require_once '../vendor/autoload.php';
 }
 require_once 'Store.php';
-require_once 'EventHandler.php';
+require_once 'CombinedEventHandler.php';
 
 if (!file_exists('config.php')) {
     $config = '<?php'               . PHP_EOL .
