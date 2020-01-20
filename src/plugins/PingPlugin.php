@@ -11,20 +11,20 @@ use \teleclient\madelbase\Store;
 
 class PingPlugin {
 
-    private $CombinedMadelineProto;
+    //private $CombinedMadelineProto;
 
-    public function __construct($CombinedMadelineProto)
+    public function __construct(/*$CombinedMadelineProto*/)
     {
-        $this->CombinedMadelineProto = $CombinedMadelineProto;
+        //$this->CombinedMadelineProto = $CombinedMadelineProto;
     }
 
-    public function process($update, $session)
+    public function process($MadelineProto, $update)
     {
-        $MadelineProto = $this->CombinedMadelineProto->instances[$session];
+        //$MadelineProto = $this->CombinedMadelineProto->instances[$session];
 
         $processed     = false;
         $msg = Upd::getMsgText($update);
-        if (strncasecmp($session, 'bot', 3) !== 0 && $msg && strncasecmp($msg, 'ping', 4) === 0) {
+        if (/*strncasecmp($session, 'bot', 3) !== 0 &&*/ $msg && strncasecmp($msg, 'ping', 4) === 0) {
             $processed = true;
             $msgId     = Upd::getMsgId($update);
             $msgIsOut  = Upd::isMsgOutward($update);

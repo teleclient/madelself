@@ -4,11 +4,11 @@ namespace teleclient\madelbase\plugins;
 
 class VerifyPlugin {
 
-    private $CombinedMadelineProto;
+    //private $CombinedMadelineProto;
 
-    public function __construct($CombinedMadelineProto)
+    public function __construct(/*$CombinedMadelineProto*/)
     {
-        $this->CombinedMadelineProto = $CombinedMadelineProto;
+        //$this->CombinedMadelineProto = $CombinedMadelineProto;
     }
 
     protected function getInt($update, string $index) : int {
@@ -25,9 +25,10 @@ class VerifyPlugin {
         return $res;
     }
 
-    public function process($update, $session)
+    public function process($MadelineProto, $update)
     {
-        $MadelineProto = $this->CombinedMadelineProto->instances[$session];
+        //$MadelineProto = $this->CombinedMadelineProto->instances[$session];
+        $session = '';
 
         $update_type  = $update['_'];
         $update_id    = $update['pts'];

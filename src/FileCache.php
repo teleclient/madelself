@@ -104,7 +104,8 @@ final class FileCache implements Cache
             }
             $encodedTtl = \pack('N', $ttl);
             try {
-                return yield File\put($this->directory . '/' . $filename, $encodedTtl . $value);
+                $text = yield File\put($this->directory . '/' . $filename, $encodedTtl . $value);
+                return $text;
             } finally {
                 $lock->release();
             }
@@ -117,7 +118,8 @@ final class FileCache implements Cache
             /** @var Lock $lock */
             $lock = yield $this->mutex->acquire($filename);
             try {
-                return yield File\unlink($this->directory . '/' . $filename);
+                $text = yield File\unlink($this->directory . '/' . $filename);
+                return $text;
             } finally {
                 $lock->release();
             }
