@@ -19,7 +19,7 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
     {
         parent::__construct($CombinedMadelineProto);
         $this->verifyPlugin = new VerifyPlugin($CombinedMadelineProto);
-        $this->pingPlugin   = new PingPlugin  ($CombinedMadelineProto);
+        $this->pingPlugin   = new   PingPlugin($CombinedMadelineProto);
     }
 
     public function __magic_sleep() {
@@ -28,22 +28,6 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
     public function __wakeup()
     {
     }
-
-//<<<<<<< HEAD
-    //public function onAny($update, $session) {
-//=======
-//    public function onAny($update, $session) {
-//>>>>>>> 7c1e40501cf7414df6d506ab32f5b6d6ca9c9f36
-        //if ($session === 'bot.madeline') {
-        //    $res = json_encode($update, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-        //    $res = ($res !== '')? $res : var_export($update, true);
-        //    yield $this->{$session}->echo($res);
-        //}
-//<<<<<<< HEAD
-    //}
-//=======
-//    }
-//>>>>>>> 7c1e40501cf7414df6d506ab32f5b6d6ca9c9f36
 
     public function onUpdateEditChannelMessage($update, $session)
     {
@@ -55,7 +39,6 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
     }
     public function onUpdateNewMessage($update, $session)
     {
-//<<<<<<< HEAD
         if ($session === 'bot.madeline') {
             $res = json_encode($update, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
             $res = ($res !== '')? $res : var_export($update, true);
@@ -65,16 +48,6 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
             $MadelineProto = $this->{$session};
             yield $this->verifyPlugin->process($MadelineProto, $update);
             yield   $this->pingPlugin->process($MadelineProto, $update);
-//=======
-        //if ($session === 'bot.madeline') {
-        //    $res = json_encode($update, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-        //    $res = ($res !== '')? $res : var_export($update, true);
-        //    yield $this->{$session}->echo($res.PHP_EOL);
-        //}
-//        if (isset($update['message']['_']) && $update['message']['_'] === 'message') {
-//            yield $this->verifyPlugin->process($update, $session);
-//            yield   $this->pingPlugin->process($update, $session);
-//>>>>>>> 7c1e40501cf7414df6d506ab32f5b6d6ca9c9f36
         }
     }
 }

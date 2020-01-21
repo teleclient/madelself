@@ -4,19 +4,11 @@ namespace teleclient\madelbase\plugins;
 
 class VerifyPlugin {
 
-//<<<<<<< HEAD
-    //private $CombinedMadelineProto;
+    private $CombinedMadelineProto;
 
-    public function __construct(/*$CombinedMadelineProto*/)
+    public function __construct($CombinedMadelineProto)
     {
-        //$this->CombinedMadelineProto = $CombinedMadelineProto;
-//=======
-//    private $CombinedMadelineProto;
-//
-//    public function __construct($CombinedMadelineProto)
-//    {
- //       $this->CombinedMadelineProto = $CombinedMadelineProto;
-//>>>>>>> 7c1e40501cf7414df6d506ab32f5b6d6ca9c9f36
+        $this->CombinedMadelineProto = $CombinedMadelineProto;
     }
 
     protected function getInt($update, string $index) : int {
@@ -33,16 +25,9 @@ class VerifyPlugin {
         return $res;
     }
 
-//<<<<<<< HEAD
     public function process($MadelineProto, $update)
     {
-        //$MadelineProto = $this->CombinedMadelineProto->instances[$session];
         $session = '';
-//=======
-//    public function process($update, $session)
-//    {
-//        $MadelineProto = $this->CombinedMadelineProto->instances[$session];
-//>>>>>>> 7c1e40501cf7414df6d506ab32f5b6d6ca9c9f36
 
         $update_type  = $update['_'];
         $update_id    = $update['pts'];
