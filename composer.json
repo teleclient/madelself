@@ -5,7 +5,6 @@
     "require": {
         "danog/madelineproto": "^5.0"
     },
-    "minimum-stability": "dev",
     "license": "AGPL-3.0-only",
     "authors": [
         {
