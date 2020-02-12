@@ -37,7 +37,7 @@ require_once 'config.php';
 require_once 'PingLoop.php';
 require_once 'TimeLoop.php';
 
-Logger::constructor(Logger::FILE_LOGGER, 'C://devphp/madelbase/src/MadelineProto.log');
+Logger::constructor(Logger::FILE_LOGGER, __DIR__ .'/MadelineProto.log');
 
 if (!file_exists('cache') || !is_dir('cache')) {
     mkdir('cache');

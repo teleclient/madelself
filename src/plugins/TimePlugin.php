@@ -3,11 +3,9 @@
 namespace teleclient\madelbase\plugins;
 
 require_once(dirname(__DIR__, 1).'/Upd.php');
-require_once(dirname(__DIR__, 1).'/Store.php');
 require_once(dirname(__DIR__, 1).'/TimeStore.php');
 
 use \teleclient\madelbase\Upd;
-use \teleclient\madelbase\Store;
 use \teleclient\madelbase\TimeStore;
 
 class TimePlugin {
@@ -76,9 +74,9 @@ class TimePlugin {
                         }
                         elseif ('photo' === $token1 && ctype_digit($rest)) {
                             if(is_writable('imgs')) {
-                                $MadelineProto->echo('WRITABLE');
+                                $MadelineProto->echo('WRITABLE'.PHP_EOL);
                             } else {
-                                $MadelineProto->echo('NOT WRITABLE');
+                                $MadelineProto->echo('NOT WRITABLE'.PHP_EOL);
                             }
                             $index = intval($rest);
                             $photos = yield $MadelineProto->photos->getUserPhotos([
@@ -97,7 +95,7 @@ class TimePlugin {
                                     'imgs/writingOverImage.jpg'
                                 );
                             }
-                            $MadelineProto->echo($path);
+                            $MadelineProto->echo("Photo path:$path".PHP_EOL);
                         }
                         elseif ('size' === $token1 && ctype_digit($rest)) {
                             $res = yield TimeStore::timeSize($rest);

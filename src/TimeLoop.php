@@ -47,10 +47,10 @@ class TimeLoop extends ResumableSignalLoop {
             return $delay;
         }
 
-        yield $MadelineProto->echo(PHP_EOL.'BEGIN'.PHP_EOL);
+        //yield $MadelineProto->echo(PHP_EOL.'BEGIN'.PHP_EOL);
 
         $userId = $self['id'];
-        $MadelineProto->echo($self['username'].PHP_EOL);
+        //$MadelineProto->echo($self['username'].PHP_EOL);
 
         $MadelineProto->sleep(1);
         $photos = yield $MadelineProto->photos->getUserPhotos([
@@ -70,11 +70,11 @@ class TimeLoop extends ResumableSignalLoop {
             //       otherwise, don't delete.
             $lastId = yield TimeStore::timeId();
             $lastId = $lastId === null? 0 : intval($lastId);
-            $MadelineProto->echo('LastId:   '.$lastId.PHP_EOL);
+            //$MadelineProto->echo('LastId:   '.$lastId.PHP_EOL);
 
-            $MadelineProto->echo('PhotoId:  '.$photo['id'].PHP_EOL);
-            $photoAge  = time() - $photo['date'];
-            $MadelineProto->echo('PhotoAge: '.$photoAge.PHP_EOL);
+            //$MadelineProto->echo('PhotoId:  '.$photo['id'].PHP_EOL);
+            //$photoAge  = time() - $photo['date'];
+            //$MadelineProto->echo('PhotoAge: '.$photoAge.PHP_EOL);
 
             if($lastId === $photo['id']) {
                 $longs = yield $MadelineProto->photos->deletePhotos([
@@ -102,7 +102,7 @@ class TimeLoop extends ResumableSignalLoop {
             $photoPath,
             $imagePath
         );
-        $MadelineProto->echo('Time: '.$time.PHP_EOL);
+        //$MadelineProto->echo('Time: '.$time.PHP_EOL);
 
         $pht = yield $MadelineProto->photos->uploadProfilePhoto([
             'file' => $photoPath
@@ -114,7 +114,7 @@ class TimeLoop extends ResumableSignalLoop {
         // ToDo: Save the id to as the last-written id in the STORE.
         $newPhotoId   = $pht['photo']['id'];
         //$newPhotoRef  = $pht['photo']['file_reference']['bytes'];
-        $newPhotoDate = $pht['photo']['date'];
+        //$newPhotoDate = $pht['photo']['date'];
         yield TimeStore::timeId(strval($newPhotoId));
 
         yield \Amp\File\unlink($photoPath);
@@ -129,11 +129,11 @@ class TimeLoop extends ResumableSignalLoop {
         $delay = $next - $now;
         $delay = $delay > 60? 60 : $delay;
 
-        $MadelineProto->echo('Now:   '.$now.PHP_EOL);
-        $MadelineProto->echo('Next:  '.$next.PHP_EOL);
-        $MadelineProto->echo('Delay: '.$delay.PHP_EOL);
+        //$MadelineProto->echo('Now:   '.$now.PHP_EOL);
+        //$MadelineProto->echo('Next:  '.$next.PHP_EOL);
+        //$MadelineProto->echo('Delay: '.$delay.PHP_EOL);
 
-        $MadelineProto->echo('END'.PHP_EOL.PHP_EOL);
+        //$MadelineProto->echo('END'.PHP_EOL.PHP_EOL);
 
         return $delay;
     }
