@@ -72,29 +72,28 @@ class TimePlugin {
                             }
                         }
                         elseif ('photo' === $token1 && ctype_digit($rest)) {
-                            if(is_writable('imgs')) {
-                                $MadelineProto->echo('WRITABLE'.PHP_EOL);
+                            if(strtolower(substr(PHP_OS, 0, 3)) === 'win') {
+                                $MadelineProto->echo('time photo command does not currently work on '.
+                                                     'Windows due to a bug in MadelineProto'.PHP_EOL);
                             } else {
-                                $MadelineProto->echo('NOT WRITABLE'.PHP_EOL);
+                                $index = intval($rest);
+                                $photos = yield $MadelineProto->photos->getUserPhotos([
+                                    'user_id' => $this->self['id'],
+                                    'offset'  => $index,
+                                    'max_id'  => 0,
+                                    'limit'   => 1
+                                ]);
+                                if(sizeof($photos['photos'])) {
+                                    $path = yield $MadelineProto->downloadToFile(
+                                        [
+                                            '_'     => 'messageMediaPhoto',
+                                            'photo' => $photos['photos'][0]
+                                        ],
+                                        'imgs/writingOverImage.jpg'
+                                    );
+                                    //$MadelineProto->echo("Photo path:$path".PHP_EOL);
+                                }
                             }
-                            $index = intval($rest);
-                            $photos = yield $MadelineProto->photos->getUserPhotos([
-                                'user_id' => $this->self['id'],
-                                'offset'  => $index,
-                                'max_id'  => 0,
-                                'limit'   => 1
-                            ]);
-                            $path = '';
-                            if(sizeof($photos['photos'])) {
-                                $path = yield $MadelineProto->downloadToFile(
-                                    [
-                                        '_'     => 'messageMediaPhoto',
-                                        'photo' => $photos['photos'][0]
-                                    ],
-                                    'imgs/writingOverImage.jpg'
-                                );
-                            }
-                            $MadelineProto->echo("Photo path:$path".PHP_EOL);
                         }
                         elseif ('size' === $token1 && ctype_digit($rest)) {
                             $res = yield TimeStore::timeSize($rest);
