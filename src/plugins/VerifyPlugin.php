@@ -46,11 +46,13 @@ class VerifyPlugin {
         //yield $MadelineProto->echo($this->jsonStr($chatInfo).PHP_EOL);
 
         $msgFront = substr(str_replace(array("\r", "\n"), '<br>', $msg), 0, 60);
-        yield $MadelineProto->echo(PHP_EOL . $session . '  ' .
+        $msgDetail = $session . '  ' .
                                   'chatID:' . $chatID . '/' . $msgID . '  ' .
                                   $update_type . '/' . $update_id .
                                   '  ' . $chatType . ':[' . $chatTitle . ']' .
-                                  '  msg:[' . $msgFront . ']' . PHP_EOL);
+                                  '  msg:[' . $msgFront . ']';
+        yield $MadelineProto->echo(PHP_EOL . $msgDetail . PHP_EOL);
+
         //$MadelineProto->echo($this->jsonStr($update).PHP_EOL);
 
         if ($userID === 0 &&

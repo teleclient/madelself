@@ -4,7 +4,7 @@
 namespace teleclient\madelbase;
 
 //date_default_timezone_set('Asia/Tehran');
-date_default_timezone_set('America/Chicago');
+date_default_timezone_set('America/Los_Angeles');
 
 use \danog\MadelineProto\Logger;
 
@@ -44,37 +44,30 @@ if (!file_exists('cache') || !is_dir('cache')) {
 }
 
 $pid = getmypid();
-echo ($pid.PHP_EOL);
-
-//$msg = "Bot execution is stopped";
-//\danog\MadelineProto\Shutdown::addCallback(static function () use ($msg) {
-//    echo($msg.PHP_EOL);
-//});
+//echo ($pid.PHP_EOL);
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
 
-
-function registerSession($MadelineProto, string $session) {
-    $self = yield $MadelineProto->instances[$session]->get_self();
-
-    $isBot = isset($self['bot'])? $self['bot'] : null;
-    $MadelineProto->instances[$session]->echo('Registered ' . ($isBot? 'BOT' : 'USER') . ' id:'. $self['id'] .
-          (isset($self['username'])? ('  name: '. $self['username']) : (' ')) .PHP_EOL);
+function registerSession($MadelineProto, string $session, $self) {
+    //$isBot = isset($self['bot'])? $self['bot'] : null;
+    //$MadelineProto->instances[$session]->echo('Registered ' . ($isBot? 'BOT' : 'USER') . ' id:'. $self['id'] .
+    //                       (isset($self['username'])? ('  name: '. $self['username']) : (' ')) .PHP_EOL);
 
     //$dump = json_encode($self, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     //$dump = ($dump !== '')? $dump : var_export($self, true);
-    //yield $MadelineProto->instances[$session]->echo($dump.PHP_EOL);
+    //$MadelineProto->instances[$session]->echo($dump.PHP_EOL);
+}
 
-    return $self;
+function isBot($self) {
+    return isset($self['bot'])? true : false;
 }
 
 function getSettings() {
     $settings = [];
     $settings['logger']['logger_level'] = Logger::ULTRA_VERBOSE;
     $settings['logger']['logger']       = Logger::FILE_LOGGER;
-  //$settings['serialization']['serialization_interval'] = 60;
-    $settings['app_info']['api_id']   = $GLOBALS['API_ID'];
-    $settings['app_info']['api_hash'] = $GLOBALS['API_HASH'];
+    $settings['app_info']['api_id']     = $GLOBALS["API_ID"];
+    $settings['app_info']['api_hash']   = $GLOBALS["API_HASH"];
     $settings['connection']['main']['ipv4'][2]['ip_address'] = '149.154.167.50';
     $settings['connection']['test']['ipv4'][2]['ip_address'] = '149.154.167.40';
 
@@ -86,11 +79,10 @@ function getSettings() {
     return $settings;
 }
 $botSettings = getSettings();
-$token = $GLOBALS['BOT_TOKEN'];
-$botSettings['app_info']['bot_auth_token'] = $GLOBALS['BOT_TOKEN'];
+$botToken = $GLOBALS['BOT_TOKEN'];
+$botSettings['app_info']['bot_auth_token'] = $botToken;
 $userSettings = getSettings();
 
-//Logger::constructor(Logger::FILE_LOGGER, 'C://devphp/madelbase/src/MadelineProto.log');
 $CombinedMadelineProto = new \danog\MadelineProto\CombinedAPI('combined.madeline', [
      'bot.madeline' =>  $botSettings,
     'user.madeline' => $userSettings,
@@ -101,45 +93,46 @@ $CombinedMadelineProto->settings['logger']['logger']       = \danog\MadelineProt
 $CombinedMadelineProto->settings['logger']['logger_param'] = 'MadelineProto.log';
 $CombinedMadelineProto->settings['logger']['param']        = 'MadelineProto.log';
 
-//$CombinedMadelineProto->settings['serialization']['serialization_interval'] = 60;
-//$CombinedMadelineProto->{'user.madeline'}->settings['connection']['main']['ipv4'][2]['ip_address'] = '149.154.167.50';
-
 $CombinedMadelineProto->async(true);
 
-$self = [];
-$CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $token, &$self) {
+//while(true) {
+    //try {
+        $CombinedMadelineProto->loop(function() use($CombinedMadelineProto, $botToken) {
+            $botSession = 'bot.madeline';
+            if ($botToken) {yield $CombinedMadelineProto->instances[$botSession]->botLogin($botToken);}
+            Logger::log('Bot login', \danog\MadelineProto\Logger::WARNING);
+            CombinedEventHandler::$botSelf = yield $CombinedMadelineProto->instances[$botSession]->start();
 
-    $botSession = 'bot.madeline';
-    if ($token) {yield $CombinedMadelineProto->instances[$botSession]->botLogin($token);}
-    Logger::log('Bot login', \danog\MadelineProto\Logger::WARNING);
-    $promises[] = $CombinedMadelineProto->instances[$botSession]->start();
+            $userSession = 'user.madeline';
+            Logger::log('Userbot login');
+            CombinedEventHandler::$userSelf = yield $CombinedMadelineProto->instances[$userSession]->start();
 
-    $userSession = 'user.madeline';
-    Logger::log('Userbot login');
-    $promises[] = $CombinedMadelineProto->instances[$userSession]->start();
-    $self  = yield  $CombinedMadelineProto->instances[$userSession]->getSelf();
-    CombinedEventHandler::$self = $self;
+            $CombinedMadelineProto->all([CombinedEventHandler::$botSelf ,CombinedEventHandler::$userSelf]);
+        });
+        $CombinedMadelineProto->setEventHandler("\\teleclient\\madelbase\\CombinedEventHandler");
+        $combinedEventHandler = $CombinedMadelineProto->getEventHandler();
+        if(!is_array(CombinedEventHandler::$botSelf) || !is_array(CombinedEventHandler::$userSelf)) {
+            echo('Please re-start the script.'.PHP_EOL);
+            \danog\MadelineProto\Magic::shutdown();
+        }
 
-    yield $CombinedMadelineProto->all($promises);
-    yield $CombinedMadelineProto->setEventHandler("\\teleclient\\madelbase\\CombinedEventHandler");
-    yield registerSession($CombinedMadelineProto,  $botSession);
-    yield registerSession($CombinedMadelineProto, $userSession);
-});
-if(!is_array($self)) {
-    echo('Please re-start the script.'.PHP_EOL);
-    \danog\MadelineProto\Shutdown::shutdown();
-    exit();
-}
+        $pingLoop = new PingLoop($CombinedMadelineProto->instances['user.madeline'], 'url', 20);
+        $CombinedMadelineProto->echo('Ping Loop started'.PHP_EOL);
+        $pingLoop->start();
 
-$pingLoop = new PingLoop($CombinedMadelineProto->instances['user.madeline'], 'url', 20);
-$CombinedMadelineProto->echo('Ping Loop started'.PHP_EOL);
-$pingLoop->start();
+        $timeLoop = new TimeLoop($CombinedMadelineProto->instances['user.madeline'], CombinedEventHandler::$userSelf);
+        $CombinedMadelineProto->echo('Time Loop started'.PHP_EOL);
+        $timeLoop->start();
 
-$timeLoop = new TimeLoop($CombinedMadelineProto->instances['user.madeline'], $self);
-$CombinedMadelineProto->echo('Time Loop started'.PHP_EOL);
-$timeLoop->start();
-
-$CombinedMadelineProto->echo('Update Loop started'.PHP_EOL);
-$CombinedMadelineProto->loop();
+        $CombinedMadelineProto->echo('Update Loop started'.PHP_EOL);
+        $CombinedMadelineProto->loop();
+    //} catch (\Throwable $e) {
+    //    try {
+    //        $CombinedMadelineProto->logger("Surfaced: $e");
+    //        $CombinedMadelineProto->getEventHandler(['async' => false])->report("Surfaced: $e");
+    //    } catch (\Throwable $e) {
+    //    }
+    //}
+//}
 
 echo('End of Script'.PHP_EOL);

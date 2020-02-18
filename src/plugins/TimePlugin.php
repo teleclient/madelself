@@ -34,7 +34,6 @@ class TimePlugin {
             $msgIsOut  = Upd::isMsgOutward($update);
             $peerId    = Upd::getToId($update);
             $ttl       = yield TimeStore::timeTtl();
-            //$ttl       = intval($ttl);
             $msgEnd    = strtolower(trim(substr($msg, 4)));
             if ($msgEnd === '') {
                 $status = yield TimeStore::timeStatus();
