@@ -110,7 +110,7 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
                         //;
                         break;
                     case 'status':
-                        $store = yield Store::getInstance();
+                        $store   = yield Store::getInstance();
                         $fetched = yield $store->get('script.echo');
                         break;
                     case 'logout':
@@ -138,9 +138,9 @@ class CombinedEventHandler extends \danog\MadelineProto\CombinedEventHandler
 
     private function getHelpText() {
         return
-        "<b>Scee Instructions:</b><br>" .
+        "<b>Download Module Instructions:</b><br>" .
         "<br>" .
-        "<b>screen help</b>      Shows this help text.<br>" .
+        "<b>down help</b>      Shows this help text.<br>" .
         "<b>screen status</b>  Shows the status of the<br>" .
         " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; echo feature.<br>" .
         "<b>screen echo on</b>   To turn on the echo feature.<br>" .

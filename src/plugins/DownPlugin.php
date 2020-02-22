@@ -41,41 +41,29 @@ class DownPlugin {
         $session = '';
 
         $processed = false;
-        $msg = Upd::getMsgText($update);
-        $peer = yield $MadelineProto->getInfo($update);
-        $peerId = $peer['bot_api_id'];
-        $messageId = $update['message']['id'];
+        $msg       = Upd::getMsgText($update);
+        $params = $this->analyzeCommand($msg);
+        if (/*strncasecmp($session, 'bot', 3) === 0 &&*/ $params !== null) {
+            $peer      = yield $MadelineProto->getInfo($update);
+            $peerId    = $peer['bot_api_id'];
+            $messageId = $update['message']['id'];
+            $name = $params[0];
+            $url  = $params[1];
 
-        //if (/*strncasecmp($session, 'bot', 3) !== 0 &&*/ $msg && strncasecmp($msg, 'ping', 4) === 0) {
+            echo("Command: '$msg'".PHP_EOL);
+            echo('url:  ' . $url .PHP_EOL);
+            echo('name: ' . $name.PHP_EOL);
 
-        if(\stripos(trim($msg), '/dl ') === 0) {
+            return $processed;
 
             try {
-
-                $tokens = \explode(' ', trim($msg));
-                if(sizeof($tokens) > 3) {
-                    echo 'Invalid input';
-                    //throw ;
-                }
-                $name = \trim($tokens[2] ?? \basename($tokens[1]));
-                $url  = \trim($tokens[1]);
-                if (!$url) {
-                    echo 'Invalid input';
-                    // continue;
-                }
-                if (\stripos($url, 'http') !== 0) {
-                    $url = "http://$url";
-                }
-                echo($url .PHP_EOL);
-                echo($name.PHP_EOL);
-
                 $id = yield $MadelineProto->messages->sendMessage([
                     'peer'            => $peerId,
                     'message'         => 'Preparing...',
                     'reply_to_msg_id' => $messageId
                 ]);
                 if (!isset($id['id'])) {
-                    $$MadelineProto->report(\json_encode($id));
+                    $MadelineProto->report(\json_encode($id));
                     foreach ($id['updates'] as $updat) {
                         if (isset($updat['id'])) {
                             $id = $updat['id'];
@@ -280,5 +268,48 @@ class DownPlugin {
             }
         }
         throw new Exception();
+    }
+
+    private function analyzeCommand(string $msg) {
+        /*
+        $tokens = \explode(' ', trim($msg));
+        if(sizeof($tokens) > 3) {
+            echo 'Invalid input';
+            //throw ;
+        }
+        $name = \trim($tokens[2] ?? \basename($tokens[1]));
+        $url  = \trim($tokens[1]);
+        if (!$url) {
+            echo 'Invalid input';
+            // continue;
+        }
+        if (\stripos($url, 'http') !== 0) {
+            $url = "http://$url";
+        }
+        echo($url .PHP_EOL);
+        echo($name.PHP_EOL);
+        */
+
+        if($msg === null || strncasecmp($msg, 'down ', 5) !== 0) {
+            return null;
+        }
+
+        $rest   = trim(substr($msg, 5));
+        $params = explode(' ', $rest);
+        if(sizeof($params) < 1 || sizeof($params) > 2) {
+            return null;
+        }
+        $name = \trim($params[1] ?? \basename($params[0]));
+        $url  = \trim($params[0]);
+        if (!$url) {
+            return null;
+        }
+        if (\stripos($url, 'http') !== 0) {
+            $url = "http://$url";
+        }
+        return [
+            $name,
+            $url
+        ];
     }
 }
