@@ -1,9 +1,15 @@
 {
     "name": "teleclient/madelbase",
     "description": "A base project for Telegram userbots using MadelineProto library",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/teleclient/MadelineProto"
+        }
+    ],
     "type": "project",
     "require": {
-        "danog/madelineproto": "^5.0"
+        "danog/madelineproto": "dev-mine as 5.1.15"
     },
     "license": "AGPL-3.0-only",
     "authors": [

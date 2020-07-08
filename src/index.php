@@ -25,7 +25,6 @@ if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEP
     if (!\file_exists('madeline.php')) {
         \copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
     }
-    //define('MADELINE_BRANCH', '4.2.25');
     require 'madeline.php';
 } else {
     require_once '../vendor/autoload.php';
@@ -47,16 +46,6 @@ $pid = getmypid();
 //echo ($pid.PHP_EOL);
 
 if (file_exists('MadelineProto.log')) {unlink('MadelineProto.log');}
-
-function registerSession($MadelineProto, string $session, $self) {
-    //$isBot = isset($self['bot'])? $self['bot'] : null;
-    //$MadelineProto->instances[$session]->echo('Registered ' . ($isBot? 'BOT' : 'USER') . ' id:'. $self['id'] .
-    //                       (isset($self['username'])? ('  name: '. $self['username']) : (' ')) .PHP_EOL);
-
-    //$dump = json_encode($self, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-    //$dump = ($dump !== '')? $dump : var_export($self, true);
-    //$MadelineProto->instances[$session]->echo($dump.PHP_EOL);
-}
 
 function isBot($self) {
     return isset($self['bot'])? true : false;

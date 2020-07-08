@@ -12,10 +12,12 @@ use \teleclient\madelbase\Store;
 class PingPlugin {
 
     private $CombinedMadelineProto;
+    private $start;
 
     public function __construct($CombinedMadelineProto)
     {
         $this->CombinedMadelineProto = $CombinedMadelineProto;
+        $this->start = time();
     }
 
     public function process($MadelineProto, $update)

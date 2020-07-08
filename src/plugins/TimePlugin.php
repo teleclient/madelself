@@ -72,7 +72,7 @@ class TimePlugin {
                             }
                         }
                         elseif ('photo' === $token1 && ctype_digit($rest)) {
-                            if(strtolower(substr(PHP_OS, 0, 3)) === 'win') {
+                            if(false/*strtolower(substr(PHP_OS, 0, 3)) === 'win'*/) {
                                 $MadelineProto->echo('time photo command does not currently work on '.
                                                      'Windows due to a bug in MadelineProto'.PHP_EOL);
                             } else {
@@ -84,11 +84,15 @@ class TimePlugin {
                                     'limit'   => 1
                                 ]);
                                 if(sizeof($photos['photos'])) {
+                                    $photo        = $photos['photos'][0];
+                                    $messageMedia = ['_' => 'messageMediaPhoto', 'photo' => $photo];
+                                    //$info = yield $MadelineProto->getDownloadInfo($messageMedia);
+                                    //$MadelineProto->echo("The file extension: {$info['ext']}".PHP_EOL);
+                                    //$MadelineProto->echo("The file base-name: {$info['name']}".PHP_EOL);
+                                    //$MadelineProto->echo("The file mime-type: {$info['mime']}".PHP_EOL);
+                                    //$MadelineProto->echo("The file size:      {$info['size']}".PHP_EOL);
                                     $path = yield $MadelineProto->downloadToFile(
-                                        [
-                                            '_'     => 'messageMediaPhoto',
-                                            'photo' => $photos['photos'][0]
-                                        ],
+                                        $messageMedia,
                                         'imgs/writingOverImage.jpg'
                                     );
                                     //$MadelineProto->echo("Photo path:$path".PHP_EOL);

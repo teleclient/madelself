@@ -4,6 +4,8 @@ npm-debug.log
 .vscode/
 nbproject/
 
+src/imgs/writingOverImage1.jpg
+
 # MadelineProt specific
 composer.lock
 *.phar
@@ -14,6 +16,7 @@ config.php
 madeline.php
 madeline.phar.version
 *.cache
+.env
 
 
 # Laravel 4 specific

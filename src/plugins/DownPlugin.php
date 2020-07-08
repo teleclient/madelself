@@ -54,7 +54,7 @@ class DownPlugin {
             echo('url:  ' . $url .PHP_EOL);
             echo('name: ' . $name.PHP_EOL);
 
-            return $processed;
+            //return $processed;
 
             try {
                 $id = yield $MadelineProto->messages->sendMessage([
