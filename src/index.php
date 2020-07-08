@@ -21,7 +21,8 @@ ini_set('log_errors',             '1');              // Error logging engine
 ini_set('error_log',              'php_errors.log'); // Logging file path
 if (file_exists('php_errors.log')) {unlink('php_errors.log');}
 
-if (!\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php')) {
+$composer = true;
+if (!$composer || !\file_exists(dirname(__DIR__, 1).DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php')) {
     if (!\file_exists('madeline.php')) {
         \copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
     }
